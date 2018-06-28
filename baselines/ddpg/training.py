@@ -100,6 +100,11 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                         epoch_episodes += 1
                         episodes += 1
 
+                        if episodes == 500:
+                            print ("epoch_episode_rewards")
+                            print (epoch_episode_rewards)
+                            return
+
                         agent.reset()
                         obs = env.reset()
 
