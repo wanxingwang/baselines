@@ -40,7 +40,7 @@ class Actor(Model):
                 scope.reuse_variables()
 
             x = obs
-            x = first_layer(x, layer_norm)
+            x = first_layer(x, self.layer_norm)
             # x = tf.layers.dense(x, 64)
             # if self.layer_norm:
             #     x = tc.layers.layer_norm(x, center=True, scale=True)
@@ -67,7 +67,7 @@ class Critic(Model):
                 scope.reuse_variables()
 
             x = obs
-            x = first_layer(x, layer_norm)
+            x = first_layer(x, self.layer_norm)
             # x = tf.layers.dense(x, 64)
             # if self.layer_norm:
             #     x = tc.layers.layer_norm(x, center=True, scale=True)
