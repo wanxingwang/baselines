@@ -18,10 +18,10 @@ class Model(object):
     def perturbable_vars(self):
         return [var for var in self.trainable_vars if 'LayerNorm' not in var.name]
 
-def first_layer(input):
+def first_layer(input, layer_norm):
     with tf.variable_scope("input"):
         x = tf.layers.dense(input, 64)
-        if self.layer_norm:
+        if layer_norm:
             x = tc.layers.layer_norm(x, center=True, scale=True)
         x = tf.nn.relu(x)
 
@@ -40,7 +40,7 @@ class Actor(Model):
                 scope.reuse_variables()
 
             x = obs
-            x = first_layer(x)
+            x = first_layer(x, layer_norm)
             # x = tf.layers.dense(x, 64)
             # if self.layer_norm:
             #     x = tc.layers.layer_norm(x, center=True, scale=True)
@@ -67,7 +67,7 @@ class Critic(Model):
                 scope.reuse_variables()
 
             x = obs
-            x = first_layer(x)
+            x = first_layer(x, layer_norm)
             # x = tf.layers.dense(x, 64)
             # if self.layer_norm:
             #     x = tc.layers.layer_norm(x, center=True, scale=True)
