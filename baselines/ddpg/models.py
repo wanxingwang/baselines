@@ -8,11 +8,11 @@ class Model(object):
 
     @property
     def vars(self):
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+        result = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='shared_weights') +  tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
 
     @property
     def trainable_vars(self):
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='shared_weights') + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
     @property
     def perturbable_vars(self):
