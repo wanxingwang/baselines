@@ -1,35 +1,29 @@
 import tensorflow as tf
 import tensorflow.contrib as tc
 
-
 class Model(object):
     def __init__(self, name):
         self.name = name
 
     @property
     def vars(self):
-        result = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='shared_weights') +  tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+        if self.name == 'critic' or self.name == 'actor':
+            result = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='sharefirst') + tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+        else:
+            result = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+        return result
 
     @property
     def trainable_vars(self):
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='shared_weights') + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        if self.name == 'critic' or self.name == 'actor':
+            result = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='sharefirst') + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        else:
+            result = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        return result
 
     @property
     def perturbable_vars(self):
         return [var for var in self.trainable_vars if 'LayerNorm' not in var.name]
-
-# def dense_relu(self, input, layer_norm):
-#     denseNet = tf.layers.dense(input, 64)
-#     if self.layer_norm:
-#         denseNet = tc.layers.layer_norm(denseNet, center=True, scale=True)
-    
-#     return tf.nn.relu(denseNet)
-
-# def shared_weights(self, input, layer_norm):
-#     with tf.variable_scope("dense1"):
-#         relu1 = dense_relu(input, layer_norm)
-#     with tf.variable_scope("dense2"):
-#         relu2 = dense_relu(input, layer_norm)
 
 
 class Actor(Model):
@@ -39,31 +33,43 @@ class Actor(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, reuse=False):
-        with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE) as scope:
-            x = obs
-            x = tf.layers.dense(x, 64)
-            if self.layer_norm:
-                x = tc.layers.layer_norm(x, center=True, scale=True)
-            x = tf.nn.relu(x)
+        if self.name == 'actor':
+            with tf.variable_scope('sharefirst', reuse=tf.AUTO_REUSE) as scope:
+                x = obs
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
 
-        with tf.variable_scope(self.name) as scope:
-            if reuse:
-                scope.reuse_variables()
+            with tf.variable_scope(self.name) as scope:
+                if reuse:
+                    scope.reuse_variables()
 
-            # x = obs
-            # x = tf.layers.dense(x, 64)
-            # if self.layer_norm:
-            #     x = tc.layers.layer_norm(x, center=True, scale=True)
-            # x = tf.nn.relu(x)
-            # x = shared_weights(x, self.layer_norm)
-            
-            x = tf.layers.dense(x, 64)
-            if self.layer_norm:
-                x = tc.layers.layer_norm(x, center=True, scale=True)
-            x = tf.nn.relu(x)
-            
-            x = tf.layers.dense(x, self.nb_actions, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
-            x = tf.nn.tanh(x)
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
+                
+                x = tf.layers.dense(x, self.nb_actions, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+                x = tf.nn.tanh(x)
+        else:
+            with tf.variable_scope(self.name) as scope:
+                if reuse:
+                    scope.reuse_variables()
+                x = obs
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
+
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
+                
+                x = tf.layers.dense(x, self.nb_actions, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+                x = tf.nn.tanh(x)
+
         return x
 
 
@@ -73,31 +79,43 @@ class Critic(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, action, reuse=False):
-        with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE) as scope:
-            x = obs
-            x = tf.layers.dense(x, 64)
-            if self.layer_norm:
-                x = tc.layers.layer_norm(x, center=True, scale=True)
-            x = tf.nn.relu(x)
-            
-        with tf.variable_scope(self.name) as scope:
-            if reuse:
-                scope.reuse_variables()
+        if self.name == 'critic':
+            with tf.variable_scope('sharefirst', reuse=tf.AUTO_REUSE) as scope:
+                x = obs
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
 
-            # x = obs
-            # x = tf.layers.dense(x, 64)
-            # if self.layer_norm:
-            #     x = tc.layers.layer_norm(x, center=True, scale=True)
-            # x = tf.nn.relu(x)
-            # x = shared_weights(x, self.layer_norm)
+            with tf.variable_scope(self.name) as scope:
+                if reuse:
+                    scope.reuse_variables()
 
-            x = tf.concat([x, action], axis=-1)
-            x = tf.layers.dense(x, 64)
-            if self.layer_norm:
-                x = tc.layers.layer_norm(x, center=True, scale=True)
-            x = tf.nn.relu(x)
+                x = tf.concat([x, action], axis=-1)
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
 
-            x = tf.layers.dense(x, 1, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+                x = tf.layers.dense(x, 1, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+
+        else:
+            with tf.variable_scope(self.name) as scope:
+                if reuse:
+                    scope.reuse_variables()
+                x = obs
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
+
+                x = tf.concat([x, action], axis=-1)
+                x = tf.layers.dense(x, 64)
+                if self.layer_norm:
+                    x = tc.layers.layer_norm(x, center=True, scale=True)
+                x = tf.nn.relu(x)
+
+                x = tf.layers.dense(x, 1, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
         return x
 
     @property
