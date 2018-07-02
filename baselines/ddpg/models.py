@@ -18,14 +18,18 @@ class Model(object):
     def perturbable_vars(self):
         return [var for var in self.trainable_vars if 'LayerNorm' not in var.name]
 
-def first_layer(input, layer_norm):
-    with tf.variable_scope("input"):
-        x = tf.layers.dense(input, 64)
-        if layer_norm:
-            x = tc.layers.layer_norm(x, center=True, scale=True)
-        x = tf.nn.relu(x)
+# def dense_relu(self, input, layer_norm):
+#     denseNet = tf.layers.dense(input, 64)
+#     if self.layer_norm:
+#         denseNet = tc.layers.layer_norm(denseNet, center=True, scale=True)
+    
+#     return tf.nn.relu(denseNet)
 
-        return x
+# def shared_weights(self, input, layer_norm):
+#     with tf.variable_scope("dense1"):
+#         relu1 = dense_relu(input, layer_norm)
+#     with tf.variable_scope("dense2"):
+#         relu2 = dense_relu(input, layer_norm)
 
 
 class Actor(Model):
@@ -35,16 +39,23 @@ class Actor(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, reuse=False):
+        with tf.variable_scope('shared_weights', reuse = True):
+            x = obs
+            x = tf.layers.dense(x, 64)
+            if self.layer_norm:
+                x = tc.layers.layer_norm(x, center=True, scale=True)
+            x = tf.nn.relu(x)
+
         with tf.variable_scope(self.name) as scope:
             if reuse:
                 scope.reuse_variables()
 
-            x = obs
-            x = first_layer(x, self.layer_norm)
+            # x = obs
             # x = tf.layers.dense(x, 64)
             # if self.layer_norm:
             #     x = tc.layers.layer_norm(x, center=True, scale=True)
             # x = tf.nn.relu(x)
+            # x = shared_weights(x, self.layer_norm)
             
             x = tf.layers.dense(x, 64)
             if self.layer_norm:
@@ -62,16 +73,23 @@ class Critic(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, action, reuse=False):
-        with tf.variable_scope(self.name, reuse = True) as scope:
+        with tf.variable_scope('shared_weights', reuse = True):
+            x = obs
+            x = tf.layers.dense(x, 64)
+            if self.layer_norm:
+                x = tc.layers.layer_norm(x, center=True, scale=True)
+            x = tf.nn.relu(x)
+            
+        with tf.variable_scope(self.name) as scope:
             if reuse:
                 scope.reuse_variables()
 
-            x = obs
-            x = first_layer(x, self.layer_norm)
+            # x = obs
             # x = tf.layers.dense(x, 64)
             # if self.layer_norm:
             #     x = tc.layers.layer_norm(x, center=True, scale=True)
             # x = tf.nn.relu(x)
+            # x = shared_weights(x, self.layer_norm)
 
             x = tf.concat([x, action], axis=-1)
             x = tf.layers.dense(x, 64)
