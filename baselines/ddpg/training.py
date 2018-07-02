@@ -64,6 +64,8 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
         epoch_start_time = time.time()
         epoch_actions = []
         epoch_qs = []
+        mean_episode_rewards = []
+        mean_100_episode_rewards = []
         epoch_episodes = 0
         for epoch in range(nb_epochs):
             for cycle in range(nb_epoch_cycles):
@@ -99,6 +101,17 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                         episode_step = 0
                         epoch_episodes += 1
                         episodes += 1
+                        mean_episode_rewards.append(np.mean(epoch_episode_rewards))
+                        mean_100_episode_rewards.append(round(np.mean(epoch_episode_rewards[-101:-1]), 1))
+
+                        if episodes > 500:
+                            print ("epoch_episode_rewards*************************************")
+                            print (epoch_episode_rewards)
+                            print ("mean_episode_rewards*************************************")
+                            print (mean_episode_rewards)
+                            print ("mean_100_episode_rewards*************************************")
+                            print (mean_100_episode_rewards)
+                            return
 
                         agent.reset()
                         obs = env.reset()
