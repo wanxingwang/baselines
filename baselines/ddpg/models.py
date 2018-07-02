@@ -39,7 +39,7 @@ class Actor(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, reuse=False):
-        with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE):
+        with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE) as scope:
             x = obs
             x = tf.layers.dense(x, 64)
             if self.layer_norm:
@@ -73,7 +73,7 @@ class Critic(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, action, reuse=False):
-        with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE):
+        with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE) as scope:
             x = obs
             x = tf.layers.dense(x, 64)
             if self.layer_norm:
