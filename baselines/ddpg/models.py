@@ -32,7 +32,7 @@ class Actor(Model):
         self.layer_norm = layer_norm
 
     def __call__(self, obs, reuse=False):
-        if self.name == 'critic':
+        if self.name == 'actor':
             with tf.variable_scope('shared_weights', reuse = tf.AUTO_REUSE) as scope:
                 x = obs
                 x = tf.layers.dense(x, 64)
