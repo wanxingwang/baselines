@@ -103,10 +103,12 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                         episodes += 1
                         mean_episode_rewards.append(np.mean(episode_rewards_history))
 
-                        print ("epoch_episode_rewards*************************************")
-                        print (epoch_episode_rewards)
-                        print ("mean_episode_rewards*************************************")
-                        print (mean_episode_rewards)
+                        if episodes > 500:
+                            print ("epoch_episode_rewards*************************************")
+                            print (epoch_episode_rewards)
+                            print ("mean_episode_rewards*************************************")
+                            print (mean_episode_rewards)
+                            return
 
                         agent.reset()
                         obs = env.reset()
