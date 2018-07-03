@@ -103,7 +103,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                         episodes += 1
                         mean_episode_rewards.append(np.mean(episode_rewards_history))
 
-                        if episodes > 500:
+                        if episodes == 500:
                             print ("epoch_episode_rewards*************************************")
                             print (epoch_episode_rewards)
                             print ("mean_episode_rewards*************************************")
